@@ -1,0 +1,59 @@
+# secrets — never commit
+# D-017 answer_key / fp_key · D-018 Supabase · D-019 Resend · 텔레그램 봇 토큰 · admin 비밀번호
+.env
+.env.*
+!.env.example
+# .env.test는 테스트 전용 고정값이라 커밋한다 (파일 첫 줄 주석 참조)
+!.env.test
+
+# dependencies
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# next.js
+.next/
+out/
+next-env.d.ts
+
+# vercel
+.vercel
+
+# supabase — 로컬 개발 아티팩트. 마이그레이션 SQL은 커밋한다
+supabase/.temp/
+supabase/.branches/
+
+# typescript
+*.tsbuildinfo
+
+# 테스트
+coverage/
+
+# 로그
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# os
+.DS_Store
+Thumbs.db
+
+# 인증서·키 파일
+*.pem
+*.key
+
+# next dev가 리포 루트에 자동 생성하는 에이전트 지침 파일. 아무도 커밋하지 않았는데
+# 누구든 dev 서버를 켜면 다시 생긴다
+/AGENTS.md
+/CLAUDE.md
+
+# 커밋해야 하는 것 — 여기에 무시 규칙을 추가하지 말 것
+# · 분류기 평가셋 50건 (08-milestones.md 출시 게이트)
+# · 마이그레이션 SQL (D-018)
+# · 학교·회사 사전 (02-threat-model.md S-2)

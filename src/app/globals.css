@@ -1,0 +1,25 @@
+/* 디자인 토큰이 사는 유일한 파일이다.
+ *
+ * 워커는 이 파일을 고치지 않는다. 새 토큰이 필요하면 코디네이터에게 묻는다.
+ * 12명이 각자 화면을 만들면서 간격·색·타이포를 제각각 정하면 나중에 합칠 수 없다.
+ *
+ * 여기 있는 것은 폰트 스택 하나뿐이다. 중립 색 스케일과 간격 스케일은 Tailwind v4의
+ * 기본값을 그대로 쓴다 — 같은 값을 다시 적으면 어느 쪽이 진실인지 알 수 없어진다.
+ * 브랜드 색·컴포넌트 클래스·다크모드는 아직 없다. 시각 방향은 따로 잡는다.
+ */
+
+@import "tailwindcss";
+
+@theme {
+  /* 한국어 우선. 폰트 파일을 추가하지 않고, 설치돼 있으면 쓰고 없으면 시스템 폰트로
+   * 떨어진다. 한국어 본문에서 Malgun Gothic보다 Pretendard 쪽이 훨씬 읽기 낫다. */
+  --font-sans:
+    "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+  }
+}

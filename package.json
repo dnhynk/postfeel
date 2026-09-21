@@ -1,0 +1,42 @@
+{
+  "name": "postfeel",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "gate": "node scripts/gate.ts",
+    "weekly": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/weekly.ts",
+    "eval": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import ./eval/resolve.ts eval/run.ts",
+    "db:migrate": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/migrate.ts",
+    "db:reset": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/migrate.ts --reset"
+  },
+  "dependencies": {
+    "next": "16.3.1",
+    "openai": "7.4.0",
+    "pg": "8.23.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^24",
+    "@types/pg": "^8.21.0",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5",
+    "vitest": "4.1.10"
+  }
+}
