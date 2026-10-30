@@ -47,7 +47,7 @@ Read [Remaining work](#remaining-work-outside-the-code) below and the launch che
 | Undecided, blocks launch | Which model runs layer 2 with inference in Korea; which region stores the database |
 | Undecided, outside v0 | The recipient identifier for mode C, private letters addressed to a named person |
 | Legal, unverified, outside v0 | How stalking law treats messages that reach someone over a network (mode C); app store rules for user-generated content (app stage). The four questions required before launch were answered in the legal review |
-| Provisional values | 500-character body, 3 attempts per locked letter, every rate limit, false-positive threshold 0.2, five switch triggers in the threat model |
+| Provisional values | 500-character body, 3 attempts per locked letter, every rate limit, false-positive threshold 0.2, five thresholds in the threat model that trigger a policy review |
 
 Four of the provisional values are also marked provisional in the code (`src/components/write/limits.ts`, `src/lib/ratelimit.ts`).
 
@@ -60,7 +60,7 @@ Most items here are outside the code. The first two need vendor checks and accou
 | Choose the layer 2 model | Where each candidate runs inference has to be confirmed in vendor documents and contracts, and the Azure model list is visible only with an account. It blocks checklist items 6, 14 and 18 |
 | Database region | Whether Supabase offers a Korean region is checked in the account. If it does not, the provider changes |
 | Four blanks in the terms and privacy policy | The privacy officer's title, a dedicated email address, the contact for the rights-remedy agency, and the effective date, listed in a comment at the end of `src/app/privacy/page.tsx`. All four come into being at deployment, and an address that does not exist yet would make the document false |
-| Human review of the sentences in the 64-case evaluation set | Whether a risky case really reads like a targeted letter takes a human reader. Until then, the file states that it is not used for the gate |
+| Human review of the sentences in the 64-case evaluation set | Whether a risky case really reads like a targeted letter takes a human reader. Until then, the set is not used for the launch decision. The 64-case file is private; `eval/dataset.ts` here holds two made-up cases |
 | Calling the crisis line 109 | It is a live counseling line, so tests cannot call it. The number is in `src/lib/crisis.ts` and shows on screen; a person checks that it connects |
 | 30 to 50 real letters | The decision log forbids filling the feed with fake letters, so people have to write them |
 | Operations rehearsal, pressing the kill switches, restoring a backup | Tests cover the code paths. The checklist asks an operator to run each one once on the real screens, and backups are a setting of the managed database outside this repository |
@@ -76,6 +76,6 @@ These four hold wherever the documents change.
 3. Reading a letter is free.
 4. Every letter page carries `noindex`. This is the one rule whose breach cannot be repaired afterwards: once a page is indexed, copies stay in caches and scrapes after the letter is deleted.
 
-## Korean section names in code comments
+## Korean section names in comments and documents
 
-Code comments are in Korean and cite README sections by their Korean names. 「절대 규칙」 is Fixed rules above. 「편지 상태는 한 파일에서만 바꾼다」 (letter state changes in one file), 「DB 접근」 (database access) and 「스타일」 (style) are sections of the [development guide](./development.md).
+Code comments and the Korean documents cite README sections by their Korean names. 「절대 규칙」 is Fixed rules and 「남은 일」 is Remaining work outside the code, both above. 「편지 상태는 한 파일에서만 바꾼다」 (letter state changes in one file), 「DB 접근」 (database access) and 「스타일」 (style) are sections of the [development guide](./development.md). 「소유 파일 규약」 (file ownership), cited in `eval/resolve.ts`, was a section of the private development README and is not in this snapshot.

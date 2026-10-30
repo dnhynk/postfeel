@@ -2,17 +2,17 @@
 
 [![CI](https://github.com/dnhynk/postfeel/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dnhynk/postfeel/actions/workflows/ci.yml)
 
-PostFeel is a web app for letters people never sent to an ex, a friend or a family member: the writer leaves each letter open to anyone, or locks it behind a question that only the intended reader should be able to answer.
+PostFeel is a web app for letters people never sent to someone they know, such as an ex, a friend, family or a coworker: the writer leaves each letter open to anyone, or locks it behind a question that only the intended reader should be able to answer.
 
-Before anyone can read a letter, a rule filter and an LLM classifier check it for details that identify a real person, and a letter the classifier could not judge stays hidden until a retry returns a verdict.
+Before anyone can read a letter, a rule filter and an LLM classifier check it for details that identify a real person, and a letter the classifier could not judge stays hidden until a retry or an operator gives a verdict.
 
 ![Three phone screens from a local build: the lock form, a locked letter, and the opened letter](docs/images/lock-flow.png)
 
 *Local build with made-up text; with no API key, the classifier's verdict for this letter was set by hand. (1) The writer sets a clue and a question, both public, and an answer that is stored only as an HMAC. (2) A reader sees the clue and the question and has three attempts. (3) The right answer opens the letter and asks once whether it seems meant for the reader.*
 
-- **Context:** Personal project, solo, built 14 to 16 August 2026. Specified, reviewed and verified by me; written with Claude Code.
+- **Context:** personal project, solo, built 14 to 16 August 2026. Specified, reviewed and verified by me; written with Claude Code.
 - **Verified:** 573 Vitest tests in 52 files pass in GitHub Actions against Postgres 16 on the snapshot commit (21 September 2026). A local re-run on 31 October 2026 gave the same count.
-- **Status:** Not launched. Public snapshot of a private development repository; history starts here because the private history contains the production filter rules, classifier prompts, evaluation set and threat model, which stay private so that users cannot learn how to get around the filter.
+- **Status:** not launched. Public snapshot of a private development repository; history starts here because the private history contains the production filter rules, classifier prompts, evaluation set and threat model, which stay private so that users cannot learn how to get around the filter.
 
 ## What it does
 
@@ -24,11 +24,13 @@ Before anyone can read a letter, a rule filter and an LLM classifier check it fo
 
 ## How it works
 
+Built with Next.js 16 (App Router), React 19, TypeScript and Tailwind CSS 4, on PostgreSQL 16 through `pg` with plain SQL migrations and no ORM. Zod validates schemas, the OpenAI SDK calls the classifier, Resend sends email, the Telegram Bot API sends operator alerts, and Vitest runs the tests. Hosting was planned on Vercel and Supabase.
+
 - Two-layer filter. `src/lib/safety/layer1.ts` runs regex and dictionary rules over the body, clue and question. `src/lib/safety/classifier.ts` asks an LLM for a verdict in a strict JSON schema. `src/lib/safety/grade.ts`, a pure function, merges both into publish, warn first and keep out of the feed, or block. Contact details and links anywhere, a school or company in the clue or question, a sensitive detail about an identifiable third party, and a model refusal all block. `tests/lib/safety-grade.test.ts` covers each rule.
-- Hold on classifier failure. A timeout, network error or spend cap returns `unavailable`. The letter is saved at the cautious middle tier but cannot be read, reacted to or unlocked until `src/lib/safety/reclassify.ts`, a cron endpoint meant to run every 10 minutes, gets a verdict. After three failed retries an operator decides. `tests/safety/pending-review.test.ts` checks the direct link, the feed, reactions and unlocking.
+- Hold on classifier failure. A timeout, network error or spend cap returns `unavailable`. The letter is saved at the cautious middle tier but cannot be read, reacted to or unlocked until the reclassify job (`src/lib/safety/reclassify.ts`, which a scheduler is meant to call every 10 minutes through `/api/cron/reclassify`) gets a verdict. After three failed retries the letter stays held until an operator decides. `tests/safety/pending-review.test.ts` checks the direct link, the feed, reactions and unlocking.
 - Hashes in place of secrets. Answers are stored as HMAC-SHA256, keyed with a server secret and salted with the letter ID, and compared in constant time (`src/lib/answer.ts`). Management tokens are stored as SHA-256 hashes (`src/lib/crypto.ts`). `tests/safety/unlock.test.ts` checks that no stored value contains the plain answer.
-- Hard deletion and retention limits. Deleting a letter removes its text, answer hashes and share metadata and keeps a tombstone row; every code path that changes a letter's status or text lives in `src/lib/letters/deletion.ts`. `src/lib/retention/purge.ts` deletes data past its retention period, such as fingerprint hashes after 90 days, and turns off new writing when a purge fails. `tests/safety/retention.test.ts` checks that expired data is gone and data inside its period is kept. The periods come from a legal review on 16 August 2026; the questions asked and the decisions that followed are in `docs/m0-legal-questions.md` and `docs/00-decisions.md` (both in Korean).
-- Switches and a safety gate. Three switches in Postgres (public reading, writing, retention health) are read on every request inside the route handlers (`src/lib/settings.ts`), so they apply across serverless instances. `tests/safety/` holds 31 numbered safety regression tests, and `npm run gate` exits non-zero unless all 31 exist and pass.
+- Hard deletion and retention limits. Deleting a letter clears its body, clue, question and answer hashes, deletes the writer's email address, and keeps a tombstone row so the management link can still report the deletion; every code path that changes a letter's status or text lives in `src/lib/letters/deletion.ts`. `src/lib/retention/purge.ts` deletes or anonymizes data past its retention period (fingerprint hashes are overwritten after 90 days) and turns off new writing when a purge fails. `tests/safety/retention.test.ts` checks that expired data is gone and data inside its period is kept. The periods come from a legal review on 16 August 2026; the questions asked and the decisions that followed are in `docs/m0-legal-questions.md` and `docs/00-decisions.md` (both in Korean).
+- Switches and a safety gate. Three switches in Postgres (public reading, writing, retention health) are read on every request inside the route handlers (`src/lib/settings.ts`), so they apply across serverless instances. `tests/safety/` holds 31 numbered safety regression tests. `npm run gate` prints how many are active and passing, and exits non-zero if a number is missing or an active test fails.
 
 Start reading here: `src/lib/safety/grade.ts`, `src/lib/letters/deletion.ts` and [`tests/safety/README.md`](tests/safety/README.md).
 
@@ -83,7 +85,7 @@ The app then runs at http://localhost:3000 without any API key. With no `OPENAI_
 
 ## Project context
 
-Personal project, solo, built 14 to 16 August 2026 and published as this snapshot on 21 September 2026. Specified, reviewed and verified by me; the design documents and most of the code were written with Claude Code, and the commits in the private history carry Co-Authored-By trailers. This snapshot squashes that history into one commit. Code comments that mention a coordinator or a worker refer to that setup: one agent session split the work into tasks, and other sessions implemented them.
+Personal project, solo, built 14 to 16 August 2026 and published as this snapshot on 21 September 2026. Specified, reviewed and verified by me; the design documents and most of the code were written with Claude Code, and 26 of the 27 commits in the private history carry Co-Authored-By trailers. This snapshot squashes that history into one commit. Most code comments (in Korean) that mention a coordinator or a worker refer to that setup: one agent session split the work into tasks, and other sessions implemented them. In `vitest.config.ts` and `tests/setup/global.ts`, a worker is a Vitest worker process.
 
 ## License
 

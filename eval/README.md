@@ -10,7 +10,7 @@ The production evaluation set is not in this public repository. Its risky and no
 npm run eval
 ```
 
-The run needs both `OPENAI_API_KEY` and Postgres, and it makes paid API calls. `classify()` uses the key. The database holds the daily spend cap that `src/lib/safety/budget.ts` checks and updates. Without a database, `checkBudget` fails, every case comes back `unavailable`, the failure path rates every letter medium, and the run reports a recall of 1.0 and a false-positive rate of 1.0, which mean nothing.
+The run needs both `OPENAI_API_KEY` and Postgres, and it makes paid API calls. `classify()` uses the key. The database holds the day's running spend, which `src/lib/safety/budget.ts` checks against its $5 daily cap and adds to after each call. Without a database, `checkBudget` fails, every case comes back `unavailable`, the failure path rates every letter medium, and the run reports a recall of 1.0 and a false-positive rate of 1.0, which mean nothing.
 
 A run whose layer 2 status section (`층 2 상태` in the output) shows any `unavailable` cases is not used for the launch decision.
 
