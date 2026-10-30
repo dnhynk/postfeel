@@ -1,41 +1,46 @@
-# 안전 회귀 테스트 31개
+# Safety regression tests
 
-기능 테스트가 아니라 **안전 회귀 테스트**다. 이게 깨지면 배포를 막는다. 출처는
-[05-api §7](../../docs/05-api.md) 26건(`#1~#17` · `#22` · `#23` · `#25`~`#31`)과
-[09-notifications §6](../../docs/09-notifications.md) 5건(`#18~#21` · `#24`)이다.
+These 31 tests guard the safety rules, and the launch gate requires every one of them to pass. 26 of them (#1 to #17, #22, #23, #25 to #31) come from section 7 of the [API spec](../../docs/05-api.md), and 5 (#18 to #21, #24) come from section 6 of the [notification spec](../../docs/09-notifications.md). Both documents are in Korean.
 
-- `describe` 이름의 `safety#<번호>`가 게이트가 세는 식별자다. **번호를 바꾸지 않는다**
-- 31개 전부 구현돼 있고 전부 통과한다. 번호를 지우거나 `it.todo`로 되돌리지 않는다 —
-  게이트가 세는 대상이 사라진다
-- 번호는 늘어날 수 있다. `#25`~`#31`은 [M0 답](../../docs/00-decisions.md)(2026-08-16)에서
-  나왔다 — 완전 파기 · 접속기록 · 격리 · 파기 작업 · 연령 · 민감정보 · 판정 전 보류.
-  새 결정이 새 실패를 만들면 번호를 더한다 — **줄이는 것만 금지다**
-- 진행 상황: `npm run gate`
+- Each test is named `safety#<n>` in its `describe` title. That number is what `npm run gate` counts, so a number keeps its meaning and its file.
+- All 31 are implemented and pass. Deleting a number or turning it back into `it.todo` would remove it from the gate's count.
+- The list can grow but not shrink. #25 to #31 were added on 16 August 2026, after the legal review: hard deletion, the legally required access log, quarantine, the retention purge, age confirmation, sensitive data, and holding letters until the classifier has judged them. A new decision that creates a new way to fail gets a new number.
+- `npm run gate` prints how many are active and passing, and exits non-zero if a number is missing or an active test fails.
 
-**25~28은 다른 번호들과 방향이 반대다.** 있어야 할 것이 있는지가 아니라 **없어야 할
-것이 없는지**를 재므로, 통과해도 화면에 아무것도 나타나지 않는다. 접속기록에
-`letter_id`를 붙이는 변경은 리뷰에서 자연스러워 보이고 동작도 멀쩡한데, 그 순간
-무계정 익명성이 끝난다. 격리·파기도 같다 — 편지는 정상적으로 내려가 있고 판정 화면도
-본문을 보여주므로, 본문이 어디에 남아 있는지는 테스트만 안다.
+Tests #25 to #28 point the other way from the rest. They check that something which must not exist is absent, so a pass shows nothing on screen. A change that adds a letter ID to the access log looks reasonable in review and works, yet it would link access records to letters and end the anonymity of writing without an account. Quarantine and purging are similar: the letter is taken down and the review screen still shows its text, so only the tests can tell where that text remains.
 
-`#28`은 여기에 **반대 방향 단언**을 하나 더 얹는다: 보유기간 **안**의 데이터가 남아
-있는지. 그게 없으면 "전부 지운다"가 나머지 단언을 전부 통과한다. 과다 파기는 되돌릴 수
-없으므로 미달 파기만큼 위험하다.
+Test #28 adds one assertion in the opposite direction: data still inside its retention period must remain. Without it, deleting everything would pass every other assertion, and over-deletion cannot be undone.
 
-| # | 파일 |
-|---|---|
-| 1 · 16 | `locked-letter.test.ts` |
-| 3 · 4 | `letter-create.test.ts` |
-| 5 · 6 · 23 | `unlock.test.ts` |
-| 12 · 13 · 22 | `classifier.test.ts` |
-| 2 · 9 · 10 | `letter-status.test.ts` |
-| 7 · 8 | `report-flow.test.ts` |
-| 11 · 14 · 15 · 17 · 25 | `manage.test.ts` |
-| 18 · 19 · 20 · 24 | `email.test.ts` |
-| 21 | `telegram.test.ts` |
-| 26 | `access-log.test.ts` |
-| 27 | `quarantine.test.ts` |
-| 28 | `retention.test.ts` |
-| 29 | `age.test.ts` |
-| 30 | `sensitive.test.ts` |
-| 31 | `pending-review.test.ts` |
+| # | What it checks | File |
+|---|---|---|
+| 1 | A locked letter's GET response has no body without the unlock cookie | `locked-letter.test.ts` |
+| 2 | A locked letter's share card image has no body | `letter-status.test.ts` |
+| 3 | A high-risk letter is not created, with no confirmation token or with a forged one | `letter-create.test.ts` |
+| 4 | Changing the body or answer after a confirmation token is issued triggers a new classification | `letter-create.test.ts` |
+| 5 | A wrong-answer response does not vary with the length or content of the right answer | `unlock.test.ts` |
+| 6 | After one client, identified by a fingerprint hash, runs out of attempts, the letter-wide limit still applies on its own | `unlock.test.ts` |
+| 7 | One report sets the letter to `hidden_auto` | `report-flow.test.ts` |
+| 8 | A letter exempt from auto-hiding stays published on ordinary reports and is hidden on severe-category reports | `report-flow.test.ts` |
+| 9 | `/m/:id` returns a `noindex` header | `letter-status.test.ts` |
+| 10 | Hidden and author-deleted letters return 404 in the feed, the API, `/m/:id` and the share card | `letter-status.test.ts` |
+| 11 | `/manage/:token` still responds when the letter is hidden or deleted | `manage.test.ts` |
+| 12 | With the classifier forced down, a letter is created at medium risk | `classifier.test.ts` |
+| 13 | A letter that layer 1 rates high is blocked whatever the classifier's state | `classifier.test.ts` |
+| 14 | No email is stored unless the age confirmation is present and true | `manage.test.ts` |
+| 15 | `/manage/:token` keeps working while public reading is switched off | `manage.test.ts` |
+| 16 | A forged unlock cookie, or one from another letter, does not open the body | `locked-letter.test.ts` |
+| 17 | An email cannot be registered through `/api/letters/:id` routes without the management token | `manage.test.ts` |
+| 18 | The unsubscribe link deletes the contact row, and nothing is sent afterwards | `email.test.ts` |
+| 19 | A letter opened twice produces one "someone opened your letter" email | `email.test.ts` |
+| 20 | No email contains the letter body | `email.test.ts` |
+| 21 | Telegram alerts contain neither the letter body nor the letter ID | `telegram.test.ts` |
+| 22 | A classifier refusal means the letter is not created | `classifier.test.ts` |
+| 23 | The plain answer appears in none of the stored answer HMACs | `unlock.test.ts` |
+| 24 | The reader-response email goes out only for a yes, and only once | `email.test.ts` |
+| 25 | A deleted letter's text no longer exists in the database | `manage.test.ts` |
+| 26 | The access log has no link to service data | `access-log.test.ts` |
+| 27 | A quarantined letter's body no longer exists in the letters table | `quarantine.test.ts` |
+| 28 | Data past its retention period is purged | `retention.test.ts` |
+| 29 | No letter is created unless the age confirmation is present and true | `age.test.ts` |
+| 30 | A sensitive detail about an identifiable third party is blocked before posting | `sensitive.test.ts` |
+| 31 | A letter the classifier has not judged cannot be read, reacted to or unlocked | `pending-review.test.ts` |

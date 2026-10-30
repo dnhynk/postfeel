@@ -1,81 +1,81 @@
-# PostFeel 문서
+# PostFeel documentation
 
-> 보내지 못한 말을 남겨두는 벽. 어떤 편지는 누구나 읽을 수 있고, 어떤 편지는 그 말을 알아볼 사람만 열 수 있다.
+PostFeel is a wall for unsent letters: some letters anyone can read, others open only for someone who recognizes them. The design documents below are in Korean; this index is in English.
 
-## 구현 상태 — 2026-08-16
+## Implementation status
 
-M1~M5(v0 코드)에 이어 **[M7](./08-milestones.md)까지 올라가 있다.** M7은 [M0 법률
-확인](./00-decisions.md)의 답이 v0의 전제를 여럿 뒤집으면서 생긴 단계다.
+The v0 features are built, followed by a round of changes made after the legal review of 16 August 2026 overturned several v0 assumptions. The results below are for the public snapshot. CI ran the tests, type check, lint and build on 21 September 2026. `npm run gate` is not part of CI; it ran locally on 31 October 2026, together with a local re-run of the rest, which matched.
 
-| 확인 | 명령 | 결과 |
+| Check | Command | Result |
 |---|---|---|
-| 전체 테스트 | `npm test` | 52 파일 · **573건 통과** (공개 스냅샷 기준) |
-| 안전 회귀 테스트 (출시 게이트) | `npm run gate` | **31/31 활성 · 31 통과 · 0 미구현** (종료 코드 0) |
-| 타입 · 린트 · 빌드 | `npm run typecheck` · `npm run lint` · `npm run build` | 통과 (셋 다 종료 코드 0) |
+| All tests | `npm test` | 52 files, 573 passed |
+| Safety regression tests (launch gate) | `npm run gate` | 31 of 31 active, 31 passing, 0 not implemented (exit code 0) |
+| Types, lint, build | `npm run typecheck`, `npm run lint`, `npm run build` | All three exit with code 0 |
 
-안전 회귀 테스트는 **`tests/safety/`**에 있다. 번호(`describe` 이름의 `safety#<n>`)가
-게이트의 식별자이고, 출처는 [05-api §7](./05-api.md)과 [09 §6](./09-notifications.md),
-번호별 출처와 파일 배치는 [`tests/safety/README.md`](../tests/safety/README.md)에 있다.
-번호가 하나라도 없거나 활성인데 통과하지 않으면 `npm run gate`가 0이 아닌 코드로 끝난다.
+The safety regression tests are in `tests/safety/`. The number in each `describe` title (`safety#<n>`) is the gate's identifier. The tests come from section 7 of the API spec and section 6 of the notification spec, and [tests/safety/README.md](../tests/safety/README.md) maps each number to its file. `npm run gate` exits non-zero if a number is missing or an active test fails.
 
-**아래 [남은 일](#남은-일--코드로-닫을-수-없는-것)과 [출시 게이트 현황](./08-milestones.md)을
-먼저 읽는다.** 게이트 19항목 중 닫힌 것은 다섯이고, 남은 것은 대부분 코드 밖이다.
+Read [Remaining work](#remaining-work-outside-the-code) below and the launch checklist in the [milestones](./08-milestones.md) first. As of 16 August 2026, 5 of the checklist's 19 items are closed, and most of the rest happens outside the code.
 
-## 읽는 순서
+## Reading order
 
-| # | 문서 | 무엇을 위한 문서인가 | 언제 읽나 |
+| # | Document (in Korean) | What it covers | When to read it |
 |---|---|---|---|
-| 00 | [결정 로그](./00-decisions.md) | 되돌리기 어려운 결정과 그 근거 | "왜 이렇게 했더라" 할 때 |
-| 01 | [제품 정의](./01-product.md) | 무엇이고 무엇이 아닌가, 북극성 | 기능 추가 요청이 왔을 때 |
-| 02 | 위협 모델(비공개) | 남용 시나리오 10개와 방어 | 안전 관련 판단 전에 |
-| 03 | [핵심 흐름](./03-flows.md) | 화면 목록, 빈 상태와 실패 상태 | UI 만들 때 |
-| 04 | [데이터 모델](./04-data-model.md) | 스키마, 상태 기계, 검증 결과 | 스키마 손댈 때 |
-| 05 | [API 명세](./05-api.md) | 엔드포인트, 레이트리밋, 안전 테스트 | 코딩 중 |
-| 06 | [계측 명세](./06-analytics.md) | 이벤트, 퍼널, 주간 지표 7개 | 코딩 중 · 매주 |
-| 07 | [운영 런북](./07-operations.md) | 신고 판정, 긴급 대응, 외부 문의 | **매일 · 새벽 2시에** |
-| 08 | [마일스톤](./08-milestones.md) | 개발 순서, 출시 게이트 | 매주 계획 |
-| 09 | [발송 명세](./09-notifications.md) | 이메일 4종, 운영자 알림, 해지 | 밖으로 나가는 메시지를 건드릴 때 |
-| — | [개발 안내](./development.md) | 로컬 실행, 테스트, 코드베이스 계약, 배포 준비 | 코드를 받아 돌려볼 때 |
+| 00 | [Decision log](./00-decisions.md) | Decisions that are hard to reverse, with their reasons | When you ask why something works the way it does |
+| 01 | [Product definition](./01-product.md) | What the product is and is not, and its north-star metric | When a feature request arrives |
+| 02 | Threat model (not public) | Ten abuse scenarios and their defenses | Before any safety decision |
+| 03 | [Core flows](./03-flows.md) | Screens, empty states and failure states | When building UI |
+| 04 | [Data model](./04-data-model.md) | Schema, state machine, verification results | When changing the schema |
+| 05 | [API spec](./05-api.md) | Endpoints, rate limits, safety tests | While coding |
+| 06 | [Analytics spec](./06-analytics.md) | Events, funnel, seven weekly metrics | While coding, and every week |
+| 07 | [Operations runbook](./07-operations.md) | Report handling, incident response, outside requests | Every day, including at 2 a.m. |
+| 08 | [Milestones](./08-milestones.md) | Build order, launch checklist | For weekly planning |
+| 09 | [Notification spec](./09-notifications.md) | Four emails, operator alerts, unsubscribing | Before touching any outgoing message |
+| | [Development guide](./development.md) | Local setup, tests, codebase rules, deployment | When you run the code |
+| | [Legal questions](./m0-legal-questions.md) | The facts and questions prepared for the legal review | When you need the facts behind the legal answers |
+| | [Classifier candidates](./o-009-classifier-candidates.md) | Screening of layer 2 models that run inference in Korea | Before choosing that model |
 
-## 문서 간 규칙
+## Rules between documents
 
-- **00이 우선한다.** 다른 문서가 00과 어긋나면 00이 맞거나, 00을 고치고 근거를 남긴다.
-- **02가 04보다 먼저다.** 정책이 스키마를 결정하지 그 반대가 아니다.
-- 결정이 바뀌면 **결정 로그에 근거와 함께** 기록한다. 문서만 조용히 고치지 않는다.
+- The decision log wins. If another document disagrees with it, either the log is right or the log is changed, with a reason.
+- The threat model comes before the data model. Policy decides the schema.
+- A changed decision goes into the decision log with its reason. Documents are not edited quietly.
 
-## 지금 열려 있는 것
+## Open items
 
-| 종류 | 내용 |
+| Kind | Items |
 |---|---|
-| 미결정 | **[O-009](./00-decisions.md) 층 2 모델 · [O-010](./00-decisions.md) DB 리전** — 둘 다 출시를 막는다. [O-002](./00-decisions.md)(모드 C 식별자)는 v0 범위 밖 |
-| 법률 미검증 | [L-003 · L-004](./00-decisions.md) — 둘 다 v0 범위 밖. 출시 전 필수였던 넷은 [M0 답](./00-decisions.md)으로 닫혔다 |
-| 가설값 | 본문 500자 · B 모드 시도 3회 · 레이트리밋 전체 · 오탐율 임계값 0.2 · 전환 트리거(위협 모델, 비공개) 5개 |
+| Undecided, blocks launch | Which model runs layer 2 with inference in Korea; which region stores the database |
+| Undecided, outside v0 | The recipient identifier for mode C, private letters addressed to a named person |
+| Legal, unverified, outside v0 | How stalking law treats messages that reach someone over a network (mode C); app store rules for user-generated content (app stage). The four questions required before launch were answered in the legal review |
+| Provisional values | 500-character body, 3 attempts per locked letter, every rate limit, false-positive threshold 0.2, five switch triggers in the threat model |
 
-가설값 넷은 코드에도 가설값으로 남아 있다 (`src/components/write/limits.ts` ·
-`src/lib/ratelimit.ts`).
+Four of the provisional values are also marked provisional in the code (`src/components/write/limits.ts`, `src/lib/ratelimit.ts`).
 
-## 남은 일 — 코드로 닫을 수 없는 것
+## Remaining work outside the code
 
-**대부분 코드 밖의 일이다.** 예외는 맨 아래 둘 — 벤더 확인과 계정이 먼저 있어야 코드를
-쓸 수 있다. 상태 표시는 [출시 게이트 현황](./08-milestones.md)에 있다.
+Most items here are outside the code. The first two need vendor checks and accounts before code can follow. Their status is tracked in the launch checklist in the [milestones](./08-milestones.md).
 
-| 항목 | 어디에 근거 | 왜 코드로 못 닫나 |
-|---|---|---|
-| **[O-009](./00-decisions.md) 층 2 모델 선정** | [후보 조사](./o-009-classifier-candidates.md) · [M7](./08-milestones.md) | 후보의 **추론 수행 위치**를 벤더 문서·계약에서 확인해야 하고, Azure 쪽은 계정이 있어야 모델 목록을 본다. 게이트 6 · 14 · 18을 함께 막는다 |
-| **[O-010](./00-decisions.md) DB 저장 리전** | [D-034](./00-decisions.md) | Supabase 국내 리전 가능 여부는 계정에서 확인한다. 안 되면 사업자를 바꾼다 |
-| 약관 · 처리방침의 빈칸 넷 | `src/app/privacy/page.tsx` 말미 주석 | 보호책임자 명칭 · 전용 이메일 · 권익침해 구제기관 연락처 · 시행일. **넷 다 배포로 값이 생긴다** — 없는 주소를 적으면 그 순간 문서가 거짓이 된다 |
-| 평가셋 64건 **문장** 사용자 검토 | `eval/dataset.ts` 상단 · [출시 게이트](./08-milestones.md) | 위험 사례가 "실제로 저격 편지처럼 읽히는가"는 사람이 읽어야 판정된다. 승인 전까지 게이트 판정 근거로 쓰지 않는다고 파일에 적혀 있다 |
-| 위기 상담 `109` 실제 통화 확인 | [출시 게이트](./08-milestones.md) · [흐름 1-6-1](./03-flows.md) | 실제 상담 회선이라 테스트로 걸 수 없다. 값은 `src/lib/crisis.ts`에 있고 화면에 뜨지만, 걸리는지는 사람이 건다 |
-| 실제 편지 30~50통 확보 | [흐름 0 빈 상태](./03-flows.md) · [M6](./08-milestones.md) | [D-007](./00-decisions.md)이 가짜 편지로 채우는 것을 금지한다. 사람이 실제로 써야 한다 |
-| 운영 리허설 · 킬 스위치 눌러보기 · 백업 복구 확인 | [M6](./08-milestones.md) · [출시 게이트](./08-milestones.md) | 코드 경로는 테스트가 덮지만, 게이트가 요구하는 것은 **운영자가 실제 화면에서 한 번 끝까지 돌려보는 것**이다. 백업은 관리형 DB 설정이라 리포 밖이다 |
-| 배포 (Vercel · Supabase · Resend · 텔레그램 · 도메인) + 시크릿 | [개발 안내 「배포 시 해야 할 일」](./development.md) · [D-018](./00-decisions.md) · [D-019](./00-decisions.md) · [D-022](./00-decisions.md) | 외부 계정 생성과 시크릿 주입이다. **비면 조용히 안 도는 키가 넷** — `SITE_URL`·`CRON_SECRET`(크론) · `ACCESS_LOG_KEY`(접속기록) · `QUARANTINE_KEY`(격리). 실패하지 않고 아무 일도 일어나지 않는다 |
-| 카카오톡 미리보기 눈으로 확인 | [M4 완료 판정](./08-milestones.md) | 배포 후에만 가능하다. 스크래퍼가 공개 URL을 가져가야 하고, 개발자 도구로는 검증되지 않는다고 M4가 못박았다 |
+| Item | Why code cannot close it |
+|---|---|
+| Choose the layer 2 model | Where each candidate runs inference has to be confirmed in vendor documents and contracts, and the Azure model list is visible only with an account. It blocks checklist items 6, 14 and 18 |
+| Database region | Whether Supabase offers a Korean region is checked in the account. If it does not, the provider changes |
+| Four blanks in the terms and privacy policy | The privacy officer's title, a dedicated email address, the contact for the rights-remedy agency, and the effective date, listed in a comment at the end of `src/app/privacy/page.tsx`. All four come into being at deployment, and an address that does not exist yet would make the document false |
+| Human review of the sentences in the 64-case evaluation set | Whether a risky case really reads like a targeted letter takes a human reader. Until then, the file states that it is not used for the gate |
+| Calling the crisis line 109 | It is a live counseling line, so tests cannot call it. The number is in `src/lib/crisis.ts` and shows on screen; a person checks that it connects |
+| 30 to 50 real letters | The decision log forbids filling the feed with fake letters, so people have to write them |
+| Operations rehearsal, pressing the kill switches, restoring a backup | Tests cover the code paths. The checklist asks an operator to run each one once on the real screens, and backups are a setting of the managed database outside this repository |
+| Deployment (Vercel, Supabase, Resend, Telegram, domain) and secrets | Outside accounts and secret injection. Four keys do nothing when empty: `SITE_URL` and `CRON_SECRET` (cron jobs), `ACCESS_LOG_KEY` (access log) and `QUARANTINE_KEY` (quarantine). Nothing fails, and nothing happens |
+| Checking the KakaoTalk link preview by eye | KakaoTalk is Korea's main messaging app. The check is possible only after deployment, because its scraper has to fetch a public URL, and developer tools do not show the result |
 
-## 절대 규칙
+## Fixed rules
 
-문서 어디를 고치든 이 넷은 건드리지 않는다.
+These four hold wherever the documents change.
 
-1. 비사용자에게 먼저 연락하지 않는다 ([D-006](./00-decisions.md)) — 발송이 이 규칙에 닿는 지점은 [09](./09-notifications.md) §1
-2. 존재하지 않는 신호를 만들지 않는다 ([D-007](./00-decisions.md))
-3. 돈을 내야 편지를 열 수 있게 만들지 않는다 ([D-008](./00-decisions.md))
-4. 개별 편지 페이지는 `noindex` (S-10(위협 모델, 비공개)) — 유일하게 사후 조치가 불가능하다
+1. The service does not start contact with people who have not used it. Section 1 of the notification spec covers where sending meets this rule.
+2. Signals report only events that happened, such as "someone opened your letter".
+3. Reading a letter is free.
+4. Every letter page carries `noindex`. This is the one rule whose breach cannot be repaired afterwards: once a page is indexed, copies stay in caches and scrapes after the letter is deleted.
+
+## Korean section names in code comments
+
+Code comments are in Korean and cite README sections by their Korean names. 「절대 규칙」 is Fixed rules above. 「편지 상태는 한 파일에서만 바꾼다」 (letter state changes in one file), 「DB 접근」 (database access) and 「스타일」 (style) are sections of the [development guide](./development.md).
