@@ -10,7 +10,7 @@ Before anyone can read a letter, a rule filter and an LLM classifier check it fo
 
 *Local build with made-up text; with no API key, the classifier's verdict for this letter was set by hand. (1) The writer sets a clue and a question, both public, and an answer that is stored only as an HMAC. (2) A reader sees the clue and the question and has three attempts. (3) The right answer opens the letter and asks once whether it seems meant for the reader.*
 
-- **Context:** personal project, solo, built 14 to 16 August 2026. Specified, reviewed and verified by me; written with Claude Code.
+- **Context:** personal project, solo, built 14 to 16 August 2026.
 - **Verified:** 573 Vitest tests in 52 files pass in GitHub Actions against Postgres 16 on the snapshot commit (21 September 2026). A local re-run on 31 October 2026 gave the same count.
 - **Status:** not launched. Public snapshot of a private development repository; history starts here because the private history contains the production filter rules, classifier prompts, evaluation set and threat model, which stay private so that users cannot learn how to get around the filter.
 
@@ -85,7 +85,7 @@ The app then runs at http://localhost:3000 without any API key. With no `OPENAI_
 
 ## Project context
 
-Personal project, solo, built 14 to 16 August 2026 and published as this snapshot on 21 September 2026. Specified, reviewed and verified by me; the design documents and most of the code were written with Claude Code, and 26 of the 27 commits in the private history carry Co-Authored-By trailers. This snapshot squashes that history into one commit. Most code comments (in Korean) that mention a coordinator or a worker refer to that setup: one agent session split the work into tasks, and other sessions implemented them. In `vitest.config.ts` and `tests/setup/global.ts`, a worker is a Vitest worker process.
+Personal project, solo, built 14 to 16 August 2026 and published as this snapshot on 21 September 2026. This snapshot squashes the private history into one commit. Code comments (in Korean) that mention a coordinator or a worker describe how development tasks were split, not runtime components. In `vitest.config.ts` and `tests/setup/global.ts`, a worker is a Vitest worker process.
 
 ## License
 
